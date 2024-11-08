@@ -29,8 +29,13 @@ class Login(CTk):
         self.entry_password = None
         self.entry_username = None
         self.title('⛳️ Golf Lite - Login')
-        # self.overrideredirect(True)  # removes title bar
-        self.geometry('600x300+0+0')
+        window_width, window_height = 600, 300
+        screen_width, screen_height = self.winfo_screenwidth(), self.winfo_screenheight()
+        x_pos = (screen_width // 2) - (window_width // 2)
+        y_pos = (screen_height // 2) - (window_height // 2)
+
+        self.attributes('-topmost', True)
+        self.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
         self.create_widgets()
 
     def create_widgets(self):
