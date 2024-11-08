@@ -76,7 +76,11 @@ class App(CTk):
     def __init__(self):
         super().__init__()
         self.title("Golf Lite App")
-        self.geometry('1200x700+0+0')
+        window_width, window_height = 1200, 700
+        screen_width, screen_height = self.winfo_screenwidth(), self.winfo_screenheight()
+        x_pos = (screen_width // 2) - (window_width // 2)
+        y_pos = (screen_height // 2) - (window_height // 2)
+        self.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
         self.create_widgets()
 
     def create_widgets(self):
