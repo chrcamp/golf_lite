@@ -5,9 +5,10 @@ import golfer
 import holes
 import rounds
 import scores
+from golfer import UserManager
 from customtkinter import *
 
-
+user_manager = UserManager()
 conn = sqlite3.connect(config.DB_NAME)
 c = conn.cursor()
 
@@ -16,8 +17,8 @@ def golf_lite_init_app():
     """
     Initialize database tables.
     """
+    user_manager = UserManager()
     course.course_table_init()
-    golfer.golfer_table_init()
     rounds.rounds_table_init()
     scores.scores_table_init()
     holes.holes_table_init()
@@ -29,7 +30,7 @@ class Login(CTk):
         self.entry_password = None
         self.entry_username = None
         self.title('⛳️ Golf Lite - Login')
-        window_width, window_height = 600, 300
+        window_width, window_height = 600, 350
         screen_width, screen_height = self.winfo_screenwidth(), self.winfo_screenheight()
         x_pos = (screen_width // 2) - (window_width // 2)
         y_pos = (screen_height // 2) - (window_height // 2)
@@ -39,10 +40,13 @@ class Login(CTk):
         self.create_widgets()
 
     def create_widgets(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+
         label_welcome = CTkLabel(self, text="Welcome to Golf Lite", font=("Avenir", 36), text_color='light green')
         label_welcome.pack(side='top', pady=10)
 
-        label_username = CTkLabel(self, text='Username / Email')
+        label_username = CTkLabel(self, text='Username')
         label_username.pack()
         self.entry_username = CTkEntry(self)
         self.entry_username.pack(pady=(0, 10))
@@ -52,24 +56,91 @@ class Login(CTk):
         self.entry_password = CTkEntry(self, show='*')
         self.entry_password.pack(pady=(0, 20))
 
-        button_enter_app = CTkButton(self, text="Log in", command=self.verify_credentials)
-        button_enter_app.pack()
+        button_enter_app = CTkButton(self, text="Log in", command=self.attempt_login)
+        button_enter_app.pack(pady=(0, 20))
 
-        label_failed_login = CTkLabel(self, text='Login attempt failed.', text_color='red')
-        label_failed_login.pack()
+        label_or = CTkLabel(self, text="--OR--")
+        label_or.pack()
+        button_register = CTkButton(self, text='Register Golfer', command=self.open_registration)
+        button_register.pack()
 
-    def verify_credentials(self):
+    def attempt_login(self):
         username = self.entry_username.get()
         password = self.entry_password.get()
-        # TODO: Add logic
-        if True:
+        valid_login = user_manager.validate_credentials(username, password)
+        if valid_login:
             print(username, password)
             self.open_main_app()
+        else:
+            self.create_widgets()
+            label_failed_login = CTkLabel(self, text='Login attempt failed.', text_color='red')
+            label_failed_login.pack()
 
     def open_main_app(self):
         self.destroy()
         app = App()
         app.mainloop()
+
+    def open_registration(self):
+        self.destroy()
+        register = Register()
+        register.mainloop()
+
+
+class Register(CTk):
+    def __init__(self):
+        super().__init__()
+        self.title("Golf Lite - Register New Golfer")
+        window_width, window_height = 600, 400
+        screen_width, screen_height = self.winfo_screenwidth(), self.winfo_screenheight()
+        x_pos = (screen_width // 2) - (window_width // 2)
+        y_pos = (screen_height // 2) - (window_height // 2)
+        self.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
+        self.create_widgets()
+
+    def create_widgets(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+
+        label_register = CTkLabel(self, text="Register New Golfer", font=("Avenir", 36), text_color='light green')
+        label_register.pack(side='top', pady=10)
+
+        label_username = CTkLabel(self, text='Username')
+        label_username.pack()
+        self.entry_username = CTkEntry(self)
+        self.entry_username.pack(pady=(0, 10))
+
+        label_password = CTkLabel(self, text='Password')
+        label_password.pack()
+        self.entry_password = CTkEntry(self, show='*')
+        self.entry_password.pack(pady=(0, 10))
+
+        label_email = CTkLabel(self, text='Email Address')
+        label_email.pack()
+        self.entry_email = CTkEntry(self)
+        self.entry_email.pack(pady=(0, 20))
+
+        button_register = CTkButton(self, text='Register', command=self.process_user_creation)
+        button_register.pack()
+        # TODO: actually register new golfer
+
+    def process_user_creation(self):
+        username = self.entry_username.get()
+        password = self.entry_password.get()
+        email = self.entry_email.get()
+
+        valid_new_user = user_manager.create_user(username, password, email)
+
+        if valid_new_user:
+            self.destroy()
+            login = Login()
+            login.mainloop()
+            label_new_user_success = CTkLabel(self, text='Golfer created successfully.', text_color='light green')
+            label_new_user_success.pack()
+        else:
+            self.create_widgets()
+            label_new_user_failed = CTkLabel(self, text='Username not available', text_color='red')
+            label_new_user_failed.pack()
 
 
 class App(CTk):

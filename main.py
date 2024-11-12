@@ -14,6 +14,10 @@ set_default_color_theme("green")  # Themes: "blue" (standard), "green", "dark-bl
 
 
 if __name__ == '__main__':
+
+    # Initialize database
+    glf.golf_lite_init_app()
+
     # Initialize the UI by showing the welcome screen
     login = glf.Login()
     login.mainloop()

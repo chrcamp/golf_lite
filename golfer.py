@@ -1,95 +1,125 @@
 import config
 import sqlite3
-
-
-conn = sqlite3.connect(config.DB_NAME)
-c = conn.cursor()
+import hashlib
+from datetime import datetime
 
 
 class Golfer:
     """A class for Golfers"""
 
-    def __init__(self, firstname, lastname, email_addr) -> None:
-        self.firstname = firstname
-        self.lastname = lastname
-        self.email_addr = email_addr
-
-        @property
-        def fullname(self):
-            return f'{self.firstname} {self.lastname}'
-
-
-def golfer_table_init():
-    c.execute("""         
-              CREATE TABLE IF NOT EXISTS golfers (
-                golfer_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                first_name TEXT,
-                last_name TEXT,
-                email TEXT
-                );
-              """)
+    def __init__(self, username, password, email, created_at=None, last_login=None, is_active=1, role='user') -> None:
+        self.username = username
+        self.password = password  # Store as hashed password
+        self.email = email
+        self.created_at = created_at if created_at else datetime.now()
+        self.last_login = last_login
+        self.is_active = is_active
+        self.role = role
 
 
-def insert_golfer(new_golfer):
-    golfer_search = get_golfer_by_email(new_golfer.email_addr)
-    if len(golfer_search) == 0:
-        with conn:
-            c.execute("INSERT INTO golfers (first_name, last_name, email) VALUES (:first, :last, :email)",
-                      {
-                          'first': new_golfer.firstname,
-                          'last': new_golfer.lastname,
-                          'email': new_golfer.email_addr
-                      }
-                      )
-    else:
-        print("Golfer already in table")
+class UserManager:
+    def __init__(self, db_path=config.DB_NAME):
+        self.db_path = db_path
+        self._create_table()
 
+    def _create_table(self):
+        with sqlite3.connect(self.db_path) as conn:
+            c = conn.cursor()
+            c.execute("""
+                        CREATE TABLE IF NOT EXISTS golfers (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            username TEXT UNIQUE NOT NULL,
+                            password TEXT NOT NULL,
+                            email TEXT UNIQUE,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            last_login TIMESTAMP,
+                            is_active INTEGER DEFAULT 1,
+                            role TEXT DEFAULT 'user'
+                        );
+                      """)
+            conn.commit()
 
-def remove_golfer(golfer_to_remove):
-    with conn:
-        c.execute("DELETE FROM golfers WHERE email = :email", {'email': golfer_to_remove.email_addr})
+    @staticmethod
+    def hash_password(password):
+        return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
+    def create_user(self, username, password, email, role='user'):
+        hashed_password = self.hash_password(password)
+        new_golfer = Golfer(
+            username=username,
+            password=hashed_password,
+            email=email,
+            role=role
+        )
 
-def get_golfer_by_email(email):
-    c.execute("SELECT * FROM golfers WHERE email = :email", {'email': email})
-    return c.fetchall()
+        with sqlite3.connect(config.DB_NAME) as conn:
+            c = conn.cursor()
+            try:
+                # Insert the new user into the users table
+                c.execute('''
+                        INSERT INTO golfers (username, password, email, created_at, last_login, is_active, role) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                    new_golfer.username,
+                    new_golfer.password,
+                    new_golfer.email,
+                    new_golfer.created_at,
+                    new_golfer.last_login,
+                    new_golfer.is_active,
+                    new_golfer.role
+                ))
+                conn.commit()
+                print("User created successfully.")
+                return True
+            except sqlite3.IntegrityError as e:
+                print(f"Error: {e}")
+                return False
 
+    def get_user(self, username):
+        with sqlite3.connect(self.db_path) as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM golfers WHERE username = ?", (username,))
+            row = c.fetchone()
 
-def update_golfer_email(golfer_to_update, new_email):
-    golfer_search = get_golfer_by_email(new_email)
-    if len(golfer_search) == 0:
-        with conn:
-            c.execute("""UPDATE golfers SET email = :email
-                    WHERE first_name = :first AND last_name = :last AND email = :orig_email""",
-                      {
-                          'email': new_email,
-                          'first': golfer_to_update.firstname,
-                          'last': golfer_to_update.lastname,
-                          'orig_email': golfer_to_update.email_addr
-                      }
-                      )
-    else:
-        print("Unable to change email address. Golfer already in table")
+            if row:
+                return Golfer(
+                    username=row[1],
+                    password=row[2],
+                    email=row[3],
+                    created_at=row[4],
+                    last_login=row[5],
+                    is_active=row[6],
+                    role=row[7]
+                )
+            else:
+                print("Golfer not found.")
+                return None
+
+    def validate_credentials(self, username, password):
+        hashed_password = self.hash_password(password)
+        with sqlite3.connect(self.db_path) as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM golfers WHERE username = ?", (username,))
+            user = c.fetchone()
+
+            if user:
+                stored_hashed_password = user[2]
+                if stored_hashed_password == hashed_password:
+                    print("Login Successful.")
+                    return user
+                else:
+                    print("Invalid password.")
+                    return False
+            else:
+                print("Username not found.")
+                return False
 
 
 if __name__ == "__main__":
 
-    golfer_table_init()
+    user_manager = UserManager()
+    user_manager.create_user("chrcamp", "testPW123", "cecampy@gmail.com")
 
-    golfer_1 = Golfer('Bill', 'Murray', 'TeamZizzou@fakemail.com')
-    golfer_2 = Golfer('Mel', 'Brooks', 'spaceballs@theEmail.com')
-    golfer_3 = Golfer('NotReal', 'FakeHuman', 'test@invalid.com')
-    golfer_4 = Golfer('Larry', 'David', 'noemail@test.com')
-
-    insert_golfer(golfer_1)
-    insert_golfer(golfer_2)
-    insert_golfer(golfer_3)
-    insert_golfer(golfer_4)
-
-    remove_golfer(golfer_3)
-    update_golfer_email(golfer_4, 'seinfeld@curb.com')
-
-    c.execute('SELECT * FROM golfers')
-    all_golfers = c.fetchall()
-    for golfer in all_golfers:
-        print(golfer)
+    golfer = user_manager.get_user("chrcamp")
+    if golfer:
+        print(f"Golfer retrieved: {golfer.username}, {golfer.email}, {golfer.created_at}")
