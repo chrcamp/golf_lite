@@ -5,19 +5,15 @@ import golfer
 import holes
 import rounds
 import scores
-from golfer import UserManager
 from customtkinter import *
 
-user_manager = UserManager()
+user_manager = golfer.UserManager()
 conn = sqlite3.connect(config.DB_NAME)
 c = conn.cursor()
 
 
 def golf_lite_init_app():
-    """
-    Initialize database tables.
-    """
-    user_manager = UserManager()
+    """Initialize database tables."""
     course.course_table_init()
     rounds.rounds_table_init()
     scores.scores_table_init()
@@ -69,16 +65,15 @@ class Login(CTk):
         password = self.entry_password.get()
         valid_login = user_manager.validate_credentials(username, password)
         if valid_login:
-            print(username, password)
-            self.open_main_app()
+            self.open_main_app(valid_login)
         else:
             self.create_widgets()
             label_failed_login = CTkLabel(self, text='Login attempt failed.', text_color='red')
             label_failed_login.pack()
 
-    def open_main_app(self):
+    def open_main_app(self, user):
         self.destroy()
-        app = App()
+        app = App(user)
         app.mainloop()
 
     def open_registration(self):
@@ -122,7 +117,6 @@ class Register(CTk):
 
         button_register = CTkButton(self, text='Register', command=self.process_user_creation)
         button_register.pack()
-        # TODO: actually register new golfer
 
     def process_user_creation(self):
         username = self.entry_username.get()
@@ -144,8 +138,9 @@ class Register(CTk):
 
 
 class App(CTk):
-    def __init__(self):
+    def __init__(self, golfer: golfer.Golfer):
         super().__init__()
+        self.golfer = golfer
         self.title("Golf Lite App")
         window_width, window_height = 1200, 700
         screen_width, screen_height = self.winfo_screenwidth(), self.winfo_screenheight()
@@ -161,7 +156,7 @@ class App(CTk):
         # Header
         header = CTkFrame(self, fg_color="transparent")
         header.pack(side='top', fill='x')
-        label_main = CTkLabel(header, text="Golf Lite", font=("Avenir", 24), text_color='light green')
+        label_main = CTkLabel(header, text=f"Golf Lite - {self.golfer.username}", font=("Avenir", 24), text_color='light green')
         label_main.pack(side='left', padx=10, pady=20)
         exit_button = CTkButton(header, text="Quit App", command=self.destroy)
         exit_button.pack(side='right', padx=10)
@@ -193,3 +188,4 @@ class App(CTk):
         button_cancel.pack(side='left', padx=10, pady=20)
         button_add_course = CTkButton(footer, text="Add Course")
         button_add_course.pack(side='right', padx=10, pady=20)
+        # TODO: implement new course creation

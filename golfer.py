@@ -106,7 +106,15 @@ class UserManager:
                 stored_hashed_password = user[2]
                 if stored_hashed_password == hashed_password:
                     print("Login Successful.")
-                    return user
+                    return Golfer(
+                        username=user[1],
+                        password=user[2],
+                        email=user[3],
+                        created_at=user[4],
+                        last_login=user[5],
+                        is_active=user[6],
+                        role=user[7]
+                )
                 else:
                     print("Invalid password.")
                     return False
@@ -118,8 +126,8 @@ class UserManager:
 if __name__ == "__main__":
 
     user_manager = UserManager()
-    user_manager.create_user("chrcamp", "testPW123", "cecampy@gmail.com")
+    user_manager.create_user("test-user", "test123", "test@invalid.com")
 
-    golfer = user_manager.get_user("chrcamp")
+    golfer = user_manager.get_user("test-user")
     if golfer:
         print(f"Golfer retrieved: {golfer.username}, {golfer.email}, {golfer.created_at}")
