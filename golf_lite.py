@@ -100,6 +100,9 @@ class Register(CTk):
         label_register = CTkLabel(self, text="Register New Golfer", font=("Avenir", 36), text_color='light green')
         label_register.pack(side='top', pady=10)
 
+        button_back_to_login = CTkButton(self, text="Back to Login", command=self.exit_to_login)
+        button_back_to_login.pack(pady=10)
+
         label_username = CTkLabel(self, text='Username')
         label_username.pack()
         self.entry_username = CTkEntry(self)
@@ -126,15 +129,17 @@ class Register(CTk):
         valid_new_user = user_manager.create_user(username, password, email)
 
         if valid_new_user:
-            self.destroy()
-            login = Login()
-            login.mainloop()
             label_new_user_success = CTkLabel(self, text='Golfer created successfully.', text_color='light green')
             label_new_user_success.pack()
         else:
             self.create_widgets()
             label_new_user_failed = CTkLabel(self, text='Username not available', text_color='red')
             label_new_user_failed.pack()
+
+    def exit_to_login(self):
+        self.destroy()
+        login = Login()
+        login.mainloop()
 
 
 class App(CTk):
