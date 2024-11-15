@@ -54,13 +54,14 @@ class Login(CTk):
 
         button_enter_app = CTkButton(self, text="Log in", command=self.attempt_login)
         button_enter_app.pack(pady=(0, 20))
+        self.bind('<Return>', self.attempt_login)
 
         label_or = CTkLabel(self, text="--OR--")
         label_or.pack()
         button_register = CTkButton(self, text='Register Golfer', command=self.open_registration)
         button_register.pack()
 
-    def attempt_login(self):
+    def attempt_login(self, event=None):
         username = self.entry_username.get()
         password = self.entry_password.get()
         valid_user = user_manager.validate_credentials(username, password)
@@ -171,8 +172,13 @@ class App(CTk):
         button_new_golfcourse = CTkButton(toolbar, text="Add New Course", command=self.add_new_course_form)
         button_new_golfcourse.pack(pady=5)
 
-        exit_button = CTkButton(toolbar, text="Quit App", command=self.destroy)
-        exit_button.pack(side='bottom', padx=5, pady=(5, 10))
+        # Log Off / Quit
+        frame_exit = CTkFrame(toolbar)
+        frame_exit.pack(side='bottom')
+        logoff_button = CTkButton(frame_exit, text="Log Off", command=self.exit_to_login)
+        logoff_button.pack(pady=5)
+        exit_button = CTkButton(frame_exit, text="Quit App", command=self.destroy)
+        exit_button.pack(padx=5, pady=(5, 10))
 
     def create_widgets(self):
         for widget in self.winfo_children():
@@ -188,6 +194,11 @@ class App(CTk):
         # Content
         future_content = CTkLabel(self, text="App Content Coming Soon!!", font=("Avenir", 36), text_color="light green")
         future_content.pack(pady=80)
+
+    def exit_to_login(self):
+        self.destroy()
+        login = Login()
+        login.mainloop()
 
     def add_new_course_form(self):
         for widget in self.winfo_children():
