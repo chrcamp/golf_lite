@@ -99,7 +99,9 @@ class UserManager:
         hashed_password = self.hash_password(password)
         with sqlite3.connect(self.db_path) as conn:
             c = conn.cursor()
-            c.execute("SELECT * FROM golfers WHERE username = ?", (username,))
+            c.execute("SELECT * FROM golfers WHERE LOWER(username) = ?",
+                      (username.lower(),)
+                      )
             user = c.fetchone()
 
             if user:
@@ -115,8 +117,8 @@ class UserManager:
                         is_active=user[6],
                         role=user[7]
                     )
-                    c.execute("UPDATE golfers SET last_login = ? WHERE username = ?",
-                              (datetime.now(), username)
+                    c.execute("UPDATE golfers SET last_login = ? WHERE LOWER(username) = ?",
+                              (datetime.now(), username.lower())
                               )
                     return valid_golfer
                 else:
@@ -125,6 +127,14 @@ class UserManager:
             else:
                 print("Username not found.")
                 return False
+
+    def change_password(self, username, new_password):
+        hashed_password = self.hash_password(new_password)
+        with sqlite3.connect(self.db_path) as conn:
+            c = conn.cursor()
+            c.execute("UPDATE golfers SET password = ? WHERE LOWER(username) = ?",
+                      (hashed_password, username.lower())
+                      )
 
 
 if __name__ == "__main__":
