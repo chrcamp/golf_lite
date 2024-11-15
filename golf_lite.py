@@ -63,9 +63,9 @@ class Login(CTk):
     def attempt_login(self):
         username = self.entry_username.get()
         password = self.entry_password.get()
-        valid_login = user_manager.validate_credentials(username, password)
-        if valid_login:
-            self.open_main_app(valid_login)
+        valid_user = user_manager.validate_credentials(username, password)
+        if valid_user:
+            self.open_main_app(valid_user)
         else:
             self.create_widgets()
             label_failed_login = CTkLabel(self, text='Login attempt failed.', text_color='red')
