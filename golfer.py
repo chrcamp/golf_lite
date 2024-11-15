@@ -106,7 +106,7 @@ class UserManager:
                 stored_hashed_password = user[2]
                 if stored_hashed_password == hashed_password:
                     print("Login Successful.")
-                    return Golfer(
+                    valid_golfer = Golfer(
                         username=user[1],
                         password=user[2],
                         email=user[3],
@@ -114,7 +114,11 @@ class UserManager:
                         last_login=user[5],
                         is_active=user[6],
                         role=user[7]
-                )
+                    )
+                    c.execute("UPDATE golfers SET last_login = ? WHERE username = ?",
+                              (datetime.now(), username)
+                              )
+                    return valid_golfer
                 else:
                     print("Invalid password.")
                     return False
