@@ -154,25 +154,45 @@ class App(CTk):
         self.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
         self.create_widgets()
 
+    def create_toolbar(self):
+        toolbar = CTkFrame(self)
+        toolbar.pack(side='left', fill='y')
+        label_user = CTkLabel(toolbar, text=self.golfer.username, font=("Avenir", 18), text_color="light green")
+        label_user.pack(side='top', padx=5, pady=20)
+        button_home = CTkButton(toolbar, text="Home", command=self.create_widgets)
+        button_home.pack(pady=(10, 5))
+        button_user = CTkButton(toolbar, text="User Profile", command=None)
+        button_user.pack(pady=(5, 20))
+
+        button_new_round = CTkButton(toolbar, text="Enter New Round", command=None)
+        button_new_round.pack(pady=5)
+        button_view_rounds = CTkButton(toolbar, text="View Rounds", command=None)
+        button_view_rounds.pack(pady=5)
+        button_new_golfcourse = CTkButton(toolbar, text="Add New Course", command=self.add_new_course_form)
+        button_new_golfcourse.pack(pady=5)
+
+        exit_button = CTkButton(toolbar, text="Quit App", command=self.destroy)
+        exit_button.pack(side='bottom', padx=5, pady=(5, 10))
+
     def create_widgets(self):
         for widget in self.winfo_children():
             widget.destroy()
+        self.create_toolbar()
 
         # Header
         header = CTkFrame(self, fg_color="transparent")
         header.pack(side='top', fill='x')
-        label_main = CTkLabel(header, text=f"Golf Lite - {self.golfer.username}", font=("Avenir", 24), text_color='light green')
-        label_main.pack(side='left', padx=10, pady=20)
-        exit_button = CTkButton(header, text="Quit App", command=self.destroy)
-        exit_button.pack(side='right', padx=10)
+        label_main = CTkLabel(header, text="Golf Lite", font=("Avenir", 24), text_color='light green')
+        label_main.pack(padx=10, pady=20)
 
         # Content
-        button_new_golfcourse = CTkButton(self, text="Add New Course", command=self.add_new_course_form)
-        button_new_golfcourse.pack(pady=80)
+        future_content = CTkLabel(self, text="App Content Coming Soon!!", font=("Avenir", 36), text_color="light green")
+        future_content.pack(pady=80)
 
     def add_new_course_form(self):
         for widget in self.winfo_children():
             widget.destroy()
+        self.create_toolbar()
 
         # Header
         header = CTkFrame(self, fg_color="transparent")
