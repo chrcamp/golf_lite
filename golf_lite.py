@@ -6,6 +6,7 @@ import holes
 import rounds
 import scores
 from customtkinter import *
+from datetime import datetime as dt
 
 user_manager = golfer.UserManager()
 conn = sqlite3.connect(config.DB_NAME)
@@ -155,6 +156,11 @@ class App(CTk):
         self.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
         self.create_widgets()
 
+    def exit_to_login(self):
+        self.destroy()
+        login = Login()
+        login.mainloop()
+
     def create_toolbar(self):
         toolbar = CTkFrame(self)
         toolbar.pack(side='left', fill='y')
@@ -162,8 +168,8 @@ class App(CTk):
         label_user.pack(side='top', padx=5, pady=20)
         button_home = CTkButton(toolbar, text="Home", command=self.create_widgets)
         button_home.pack(pady=(10, 5))
-        button_user = CTkButton(toolbar, text="User Profile", command=None)
-        button_user.pack(pady=(5, 20))
+        button_user_profile = CTkButton(toolbar, text="User Profile", command=self.view_user_profile)
+        button_user_profile.pack(pady=(5, 20))
 
         button_new_round = CTkButton(toolbar, text="Enter New Round", command=None)
         button_new_round.pack(pady=5)
@@ -189,16 +195,42 @@ class App(CTk):
         header = CTkFrame(self, fg_color="transparent")
         header.pack(side='top', fill='x')
         label_main = CTkLabel(header, text="Golf Lite", font=("Avenir", 24), text_color='light green')
-        label_main.pack(padx=10, pady=20)
+        label_main.pack(pady=20)
 
         # Content
         future_content = CTkLabel(self, text="App Content Coming Soon!!", font=("Avenir", 36), text_color="light green")
         future_content.pack(pady=80)
 
-    def exit_to_login(self):
-        self.destroy()
-        login = Login()
-        login.mainloop()
+    def view_user_profile(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+        self.create_toolbar()
+
+        # Header
+        header = CTkFrame(self, fg_color="transparent")
+        header.pack(side='top', fill='x')
+        label_page = CTkLabel(header, text="User Profile", font=("Avenir", 24), text_color='light green')
+        label_page.pack(pady=20)
+
+        # Content
+        profile_data = {
+            "Username": self.golfer.username,
+            "Email": self.golfer.email,
+            "User Since": dt.strptime(self.golfer.created_at, '%Y-%m-%d %H:%M:%S.%f').strftime("%m/%d/%Y"),
+            "Last Login": dt.strptime(self.golfer.last_login, '%Y-%m-%d %H:%M:%S.%f').strftime("%x %X")
+        }
+
+        frame_profile = CTkFrame(self)
+        frame_profile.pack(pady=80)
+
+        for row, (field_name, field_value) in enumerate(profile_data.items()):
+            name_label = CTkLabel(frame_profile, text=field_name, anchor="e")
+            name_label.grid(row=row, column=0, padx=5, pady=10, sticky="e")
+            value_label = CTkLabel(frame_profile, text=field_value, anchor="w")
+            value_label.grid(row=row, column=1, padx=5, pady=10, sticky="w")
+
+        button_change_pw = CTkButton(self, text="Change Password", command=None)
+        button_change_pw.pack()
 
     def add_new_course_form(self):
         for widget in self.winfo_children():
